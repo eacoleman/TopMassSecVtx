@@ -32,7 +32,7 @@ public:
     virtual void BookHistos();
     virtual void WriteHistos();
     virtual void analyze();
-    virtual bool selectEvent();
+    virtual bool selectEvent(int);
 
     inline virtual void setMaxEvents(Long64_t max) {
         fMaxevents = max;
@@ -50,7 +50,7 @@ public:
     std::vector<TH1*> fHistos;
 
     // Histograms
-    TH1D *fHMlb;
+
 
 };
 #endif

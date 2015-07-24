@@ -8,8 +8,36 @@
 #include <TLorentzVector.h>
 #include <iostream>
 
+/////////////////////////////////////////////////////////////////////////////////
+//                                      MAGIC                                  //
+/////////////////////////////////////////////////////////////////////////////////
 const float gCSVWPMedium = 0.783;
 const float gCSVWPLoose = 0.405;
+
+//process names
+TString aProc[5] = { "E", "EE", "EM", "MM", "M" }; 
+std::vector<TString> processes (&aProc[0],&aProc[0]+5);
+
+//histogram names
+TString aNames[10] = { "Mlb", "MET", "J_Num", "J_Pt", "J_Eta",
+                       "B_Num", "B_Pt", "B_Eta", "L_Pt", "L_Eta" };
+std::vector<TString> histNames (&aNames[0],&aNames[0]+10);
+
+//axis titles
+TString aAxes[10] = { "M(lb) [GeV]", "Missing E_t [GeV]", "Number of Jets",
+                      "Jet P_t [GeV]", "Jet Eta", "Number of B-jets",
+                      "B-jet P_t [GeV]", "B-jet Eta", "Lepton P_t [GeV]",
+                      "Lepton Eta" };
+
+//binning options
+std::vector<TString> histAxisT (&aAxes[0],&aAxes[0]+10); 
+int aBins[30] = { 100,  0,  200,       50,  0, 200,
+                   15,  0,   15,      100,  0, 500,
+                   20, -5,    5,       15,  0,  15,
+                  100,  0,  500,       20, -5,   5,
+                  100,  0,  500,       20, -5,   5 };
+                  
+/////////////////////////////////////////////////////////////////////////////////
 
 void MlbWidthAnalysis::RunJob(TString filename) {
     TFile *file = TFile::Open(filename, "recreate");
@@ -34,10 +62,27 @@ void MlbWidthAnalysis::End(TFile *file) {
 }
 
 void MlbWidthAnalysis::BookHistos() {
-    fHMlb = new TH1D("Mlb","Mlb", 100, 0, 200);
-    fHistos.push_back(fHMlb);
-    fHMlb->SetXTitle("m(lb) [GeV]");
 
+    // Adding in histograms for each subprocess
+    std::vector<TString>::const_iterator k;
+    int bin_it = 0;
+    for(std::vector<TString>::const_iterator i = processes.begin(); i != processes.end(); i++) {
+      // Hack together another iterator
+      k = histAxisT.begin();
+      bin_it = 0;
+      for(std::vector<TString>::const_iterator j = histNames.begin(); j != histNames.end() && k != histAxisT.end(); j++) {
+        // Add in the histogram
+        TString name = TString("mlbwa_") + *i + TString("_") + *j;
+        TH1D *thist = new TH1D(name, name, aBins[bin_it], aBins[bin_it+1], aBins[bin_it+2]);
+        thist->SetXTitle(*k);
+        fHistos.push_back(thist);
+
+        std::cout<<"Adding in histo name "<<name<<" with binning "<<aBins[bin_it]<<" "<<aBins[bin_it+1]<<" "<<aBins[bin_it+2]<<std::endl;
+        // Add to our makeshift indices
+        k++;
+        bin_it+=3;
+      }
+    }
 
     // Call Sumw2() for all of them
     std::vector<TH1*>::iterator h;
@@ -55,13 +100,13 @@ void MlbWidthAnalysis::WriteHistos() {
 }
 
 //
-bool MlbWidthAnalysis::selectEvent() {
+bool MlbWidthAnalysis::selectEvent(int i) {
     float btagWP = gCSVWPLoose;
     if (abs(evcat) == 11 || abs(evcat) == 13) btagWP = gCSVWPMedium;
 
     // Count number of loose or medium b-tags
     int nbjets(0);
-    for( int i=0; i < nj; i++) {
+    for(int i=0; i < nj; i++) {
         bool btagStatus(jcsv[i] > btagWP);
         nbjets += btagStatus;
     }
@@ -69,12 +114,32 @@ bool MlbWidthAnalysis::selectEvent() {
     // Require at least one b-tagged jet (loose for dilep, med for l+jets)
     if ( nbjets==0 ) return false;
 
-    if (abs(evcat) == 11*13) return true;                // emu
-    if (abs(evcat) == 11*11 && metpt > 40.) return true; // ee
-    if (abs(evcat) == 13*13 && metpt > 40.) return true; // mumu
-    if (abs(evcat) == 11 && nj > 3) return true;         // e
-    if (abs(evcat) == 13 && nj > 3) return true;         // mu
-    return false;
+    switch(i) {
+      //e
+      case 0:
+          return (abs(evcat) == 11 && nj>3);
+        break;
+      //ee
+      case 1:
+          return (abs(evcat) == 11*11 && metpt>40. && nj>1);
+        break;
+      //emu
+      case 2:
+          return (abs(evcat) == 11*13 && nj>1);
+        break;
+      //mumu
+      case 3:
+          return (abs(evcat) == 13*13 && metpt>40. && nj>1);
+        break;
+      //mu
+      case 4:
+          return (abs(evcat) == 13 && nj>3);
+        break;
+      //else
+      default:
+          return false;
+        break;
+    }
 }
 
 
@@ -84,35 +149,62 @@ void MlbWidthAnalysis::analyze() {
     if(npf > 999) return;
     ///////////////////////////////////////////////////
 
-    if(selectEvent()){
+    std::vector<TH1*>::iterator h = fHistos.begin();
+    for(unsigned int i=0; i<processes.size() && h != fHistos.end();i++) {
+      if(selectEvent(i)){
 
-        float mlbmin = 1000.;
-        // Loop on the jets
-        for (int ij = 0; ij < nj; ++ij){
+          float mlbmin = 1000.;
+          int nbjets = 0;
 
-            // Select CSV medium tagged ones
-            if(jcsv[ij] < gCSVWPMedium) continue;
+          // Loop on the jets
+          for (int ij = 0; ij < nj; ++ij){
+              // Fill jet histograms once per jet
+              fHistos.at(i*10+3)->Fill(jpt[ij]);
+              fHistos.at(i*10+4)->Fill(jeta[ij]);
 
-            TLorentzVector pj;
+              // Select CSV medium tagged ones
+              if(jcsv[ij] < gCSVWPMedium) continue;
 
-            // Loop on the leptons
-            for (int il = 0; il < nl; ++il){
-                TLorentzVector pl;
+              TLorentzVector pj;
 
-                // Calculate invariant mass
-                pj.SetPtEtaPhiM(jpt[ij], jeta[ij], jphi[ij], 0.);
-                pl.SetPtEtaPhiM(lpt[il], leta[il], lphi[il], 0.);
-                float mlb = (pl + pj).M();
+              nbjets++;
+              // Fill proper histograms with bjet pts, etas
+              fHistos.at(i*10+6)->Fill(jpt[ij]);
+              fHistos.at(i*10+7)->Fill(jeta[ij]);
 
-                // Store only if it's smaller than the minimum
-                if (mlb < mlbmin) mlbmin = mlb;
-            }
-        }
+              // Loop on the leptons
+              for (int il = 0; il < nl; ++il){
+                  TLorentzVector pl;
 
-        // Fill histogram with weights for branching fractions (w[0]),
-        // pileup (w[1]), and lepton selection efficiency (w[4])
-        // Check l 632-642 in bin/runTopAnalysis.cc for all the weights
-        if(mlbmin < 1000.) fHMlb->Fill(mlbmin, w[0]*w[1]*w[4]);
+                  // Calculate invariant mass
+                  pj.SetPtEtaPhiM(jpt[ij], jeta[ij], jphi[ij], 0.);
+                  pl.SetPtEtaPhiM(lpt[il], leta[il], lphi[il], 0.);
+                  float mlb = (pl + pj).M();
+
+                  // Store only if it's smaller than the minimum
+                  if (mlb < mlbmin) mlbmin = mlb;
+              }
+          }
+
+          // FILL REMAINING HISTOGRAMS
+          // using a sketchy iterator (but hey, it works).
+
+          // Fill histogram with weights for branching fractions (w[0]),
+          // pileup (w[1]), and lepton selection efficiency (w[4])
+          // Check l 632-642 in bin/runTopAnalysis.cc for all the weights
+          if(mlbmin < 1000.) {(*h)->Fill(mlbmin, w[0]*w[1]*w[4]);} h++; //mlb
+                              (*h)->Fill(metpt);                   h++; //met
+                              (*h)->Fill(nj);                      h++; //njets
+                                                                   h++; //ptjets
+                                                                   h++; //etajets
+                              (*h)->Fill(nbjets);                  h++; //nbjets
+                                                                   h++; //ptbjets
+                                                                   h++; //etabjets
+          for(int il = 0; il<nl; il++){(*h)->Fill(lpt[il]);}       h++; //ptleps
+          for(int il = 0; il<nl; il++){(*h)->Fill(leta[il]);}      h++; //etaleps
+
+          break; 
+      } else h+=10;
     }
 }
 
