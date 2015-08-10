@@ -32,7 +32,7 @@ public:
     virtual void BookHistos();
     virtual void WriteHistos();
     virtual void analyze();
-    virtual TH1F* getInterpHisto(char* lep, float width);
+    virtual TH1F* getInterpHisto(const char* lep, float width);
     virtual bool selectEvent(int);
 
     inline virtual void setMaxEvents(Long64_t max) {
