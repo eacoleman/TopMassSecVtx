@@ -115,11 +115,11 @@ void MlbWidthAnalysis::WriteHistos() {
 }
 
 TH1F* MlbWidthAnalysis::getInterpHisto(char* lep, float width) {
-    TFile *interpFile = new TFile(plotterLocation);
+    TFile *interpFile = new TFile(weightsLocation);
       
     char histoLocation[256];
     sprintf(histoLocation, "mlwba_%s_TMassWeights_NomTo%.2f", lep, width);
-    TH1F *ratioHisto = interpFile->Get(histoLocation);
+    TH1F *ratioHisto = (TH1F*) interpFile->Get(histoLocation);
 
     return ratioHisto;
 }
@@ -181,7 +181,7 @@ void MlbWidthAnalysis::analyze() {
           float intrpWt = 1;
 
           if(interpolate) {
-            intrpWtHisto = *(getInterpHisto(processes.at(i).Data(),currentWidth));
+            intrpWtHisto = getInterpHisto(processes.at(i).Data(),currentWidth);
             intrpWt = getBinContentAt(intrpWtHisto,tmass[0]); 
             //int numNonzero = 0; intrpWt = 0;
             //for(int i=0; i<50;i++) {
