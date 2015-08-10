@@ -1,4 +1,4 @@
-#include "UserCode/TopMassSecVtx/interface/th1fmorph.h"
+#include "../interface/th1fmorph.h"
 #include "TROOT.h"
 #include "TAxis.h"
 #include "TArrayD.h"
