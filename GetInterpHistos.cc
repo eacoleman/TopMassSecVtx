@@ -23,12 +23,11 @@ int interpolations = 3;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-int main(int cargs, const char* argv[]) {
+void GetInterpHistos() {
 
   TFile *nomFile = new TFile(nomLocation);
   TFile *maxFile = new TFile(maxLocation);
-  TFile *outFile = new TFile(outFileLocation);
+  TFile *outFile = new TFile(outFileLocation, "RECREATE");
 
   for(int wid=0; wid<interpolations; wid++) {
     float curWidth = (maxWidth - nomWidth)/(interpolations+1)+nomWidth;
@@ -44,7 +43,7 @@ int main(int cargs, const char* argv[]) {
       TH1F *maxHisto = (TH1F*) maxFile->Get(histLoc);
 
       char targName[128];
-      sprintf(targName, "mlbwa_%s_TMassWeights_NomTo%.2f", leps[i], widths[wid]);
+      sprintf(targName, "mlbwa_%s_TMassWeights_NomTo%.2f", leps[i],curWidth); 
       TH1F *trgHisto = (TH1F*) th1fmorph(targName   , targName, 
                                          nomHisto   , maxHisto, 
                                          nomWidth   , maxWidth,
@@ -62,4 +61,3 @@ int main(int cargs, const char* argv[]) {
   outFile->Close();
 
 }
-#endif
