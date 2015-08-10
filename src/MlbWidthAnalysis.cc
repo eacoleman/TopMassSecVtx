@@ -8,6 +8,43 @@
 #include <TLorentzVector.h>
 #include <iostream>
 
+/////////////////////////////////////////////////////////////////////////////////
+//                                      MAGIC                                  //
+/////////////////////////////////////////////////////////////////////////////////
+const float gCSVWPMedium = 0.783;
+const float gCSVWPLoose = 0.405;
+
+//process names
+TString aProc[5] = { "E", "EE", "EM", "MM", "M" }; 
+std::vector<TString> processes (&aProc[0],&aProc[0]+5);
+
+//histogram names
+TString aNames[12] = { "Mlb", "MET", "J_Num", "J_Pt", "J_Eta",
+                       "B_Num", "B_Pt", "B_Eta", "L_Pt", "L_Eta", "Count", 
+                       "TMass" };
+std::vector<TString> histNames (&aNames[0],&aNames[0]+12);
+
+//axis titles
+TString aAxes[12] = { "M(lb) [GeV]", "Missing E_{t} [GeV]", "Number of Jets",
+                      "Jet P_{t} [GeV]", "Jet #eta", "Number of B-jets",
+                      "B-jet P_{t} [GeV]", "B-jet #eta", "Lepton P_{t} [GeV]",
+                      "Lepton #eta", "", "t mass" };
+std::vector<TString> histAxisT (&aAxes[0],&aAxes[0]+12); 
+
+//binning options
+int aBins[36] = { 100,  0,  200,       50,  0, 200,
+                   15,  0,   15,      100,  0, 500,
+                   20, -5,    5,       15,  0,  15,
+                  100,  0,  500,       20, -5,   5,
+                  100,  0,  500,       20, -5,   5,
+                   10,  0,    9,      100,  100, 200 };
+
+bool interpolate = false;
+TString weightsLocation = "treedir/TMassWeightHistograms.root";
+float currentWidth = 3.0;
+
+/////////////////////////////////////////////////////////////////////////////////
+
 float getBinContentAt(TH1F* histo, float input) {
   TAxis *xax = (TAxis*) histo->GetXaxis();
   if(input < xax->GetXmin() || input > xax->GetXmax()) return -1;

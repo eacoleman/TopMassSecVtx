@@ -19,7 +19,7 @@ int lepsSize = 5;
 
 float maxWidth = 7.5;
 float nomWidth = 1.5;
-int interpolations = 3
+int interpolations = 3;
 
 ////////////////////////////////////////////////////////////////////////////////
 
