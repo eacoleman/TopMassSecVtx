@@ -181,7 +181,7 @@ void MlbWidthAnalysis::analyze() {
           float intrpWt = 1;
 
           if(interpolate) {
-            intrpWtHisto = *(getInterpHisto(processes.at(i),currentWidth));
+            intrpWtHisto = *(getInterpHisto(processes.at(i).Data(),currentWidth));
             intrpWt = getBinContentAt(intrpWtHisto,tmass[0]); 
             //int numNonzero = 0; intrpWt = 0;
             //for(int i=0; i<50;i++) {
