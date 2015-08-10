@@ -8,36 +8,12 @@
 #include <TLorentzVector.h>
 #include <iostream>
 
-/////////////////////////////////////////////////////////////////////////////////
-//                                      MAGIC                                  //
-/////////////////////////////////////////////////////////////////////////////////
-const float gCSVWPMedium = 0.783;
-const float gCSVWPLoose = 0.405;
+float getBinContentAt(TH1F* histo, float input) {
+  TAxis *xax = (TAxis*) histo->GetXaxis();
+  if(input < xax->GetXmin() || input > xax->GetXmax()) return -1;
 
-//process names
-TString aProc[5] = { "E", "EE", "EM", "MM", "M" }; 
-std::vector<TString> processes (&aProc[0],&aProc[0]+5);
-
-//histogram names
-TString aNames[10] = { "Mlb", "MET", "J_Num", "J_Pt", "J_Eta",
-                       "B_Num", "B_Pt", "B_Eta", "L_Pt", "L_Eta" };
-std::vector<TString> histNames (&aNames[0],&aNames[0]+10);
-
-//axis titles
-TString aAxes[10] = { "M(lb) [GeV]", "Missing E_t [GeV]", "Number of Jets",
-                      "Jet P_t [GeV]", "Jet Eta", "Number of B-jets",
-                      "B-jet P_t [GeV]", "B-jet Eta", "Lepton P_t [GeV]",
-                      "Lepton Eta" };
-
-//binning options
-std::vector<TString> histAxisT (&aAxes[0],&aAxes[0]+10); 
-int aBins[30] = { 100,  0,  200,       50,  0, 200,
-                   15,  0,   15,      100,  0, 500,
-                   20, -5,    5,       15,  0,  15,
-                  100,  0,  500,       20, -5,   5,
-                  100,  0,  500,       20, -5,   5 };
-                  
-/////////////////////////////////////////////////////////////////////////////////
+  return histo->GetBinContent(xax->FindBin(input));
+}
 
 void MlbWidthAnalysis::RunJob(TString filename) {
     TFile *file = TFile::Open(filename, "recreate");
@@ -77,7 +53,7 @@ void MlbWidthAnalysis::BookHistos() {
         thist->SetXTitle(*k);
         fHistos.push_back(thist);
 
-        std::cout<<"Adding in histo name "<<name<<" with binning "<<aBins[bin_it]<<" "<<aBins[bin_it+1]<<" "<<aBins[bin_it+2]<<std::endl;
+        //std::cout<<"Adding in histo name "<<name<<" with binning "<<aBins[bin_it]<<" "<<aBins[bin_it+1]<<" "<<aBins[bin_it+2]<<std::endl;
         // Add to our makeshift indices
         k++;
         bin_it+=3;
@@ -90,6 +66,8 @@ void MlbWidthAnalysis::BookHistos() {
         (*h)->Sumw2();
     }
 }
+
+
 void MlbWidthAnalysis::WriteHistos() {
     // Write all histos to file, then delete them
     std::vector<TH1*>::iterator h;
@@ -97,6 +75,16 @@ void MlbWidthAnalysis::WriteHistos() {
         (*h)->Write((*h)->GetName());
         (*h)->Delete();
     }
+}
+
+TH1F* MlbWidthAnalysis::getInterpHisto(char* lep, float width) {
+    TFile *interpFile = new TFile(plotterLocation);
+      
+    char histoLocation[256];
+    sprintf(histoLocation, "mlwba_%s_TMassWeights_NomTo%.2f", lep, width);
+    TH1F *ratioHisto = interpFile->Get(histoLocation);
+
+    return ratioHisto;
 }
 
 //
@@ -152,6 +140,23 @@ void MlbWidthAnalysis::analyze() {
     std::vector<TH1*>::iterator h = fHistos.begin();
     for(unsigned int i=0; i<processes.size() && h != fHistos.end();i++) {
       if(selectEvent(i)){
+          TH1F *intrpWtHisto;
+          float intrpWt = 1;
+
+          if(interpolate) {
+            intrpWtHisto = *(getInterpHisto(processes.At(i),currentWidth));
+            float intrpWt = getBinContentAt(intrpWtHisto,tmass[0]); 
+            //int numNonzero = 0; intrpWt = 0;
+            //for(int i=0; i<50;i++) {
+            //  if(tmass[i]>0) { 
+            //    intrpWt+=getBinContentAt(intrpWtHisto,tmass[i]);
+            //    numNonzero++;
+            //  }
+            //}
+            //intrpWt /= numNonzero;
+          }
+
+          float finalWt = w[0]*w[1]*w[4]*intrpWt;
 
           float mlbmin = 1000.;
           int nbjets = 0;
@@ -159,8 +164,8 @@ void MlbWidthAnalysis::analyze() {
           // Loop on the jets
           for (int ij = 0; ij < nj; ++ij){
               // Fill jet histograms once per jet
-              fHistos.at(i*10+3)->Fill(jpt[ij]);
-              fHistos.at(i*10+4)->Fill(jeta[ij]);
+              fHistos.at(i*12+3)->Fill(jpt[ij], finalWt);
+              fHistos.at(i*12+4)->Fill(jeta[ij], finalWt);
 
               // Select CSV medium tagged ones
               if(jcsv[ij] < gCSVWPMedium) continue;
@@ -169,8 +174,8 @@ void MlbWidthAnalysis::analyze() {
 
               nbjets++;
               // Fill proper histograms with bjet pts, etas
-              fHistos.at(i*10+6)->Fill(jpt[ij]);
-              fHistos.at(i*10+7)->Fill(jeta[ij]);
+              fHistos.at(i*12+6)->Fill(jpt[ij], finalWt);
+              fHistos.at(i*12+7)->Fill(jeta[ij], finalWt);
 
               // Loop on the leptons
               for (int il = 0; il < nl; ++il){
@@ -192,19 +197,21 @@ void MlbWidthAnalysis::analyze() {
           // Fill histogram with weights for branching fractions (w[0]),
           // pileup (w[1]), and lepton selection efficiency (w[4])
           // Check l 632-642 in bin/runTopAnalysis.cc for all the weights
-          if(mlbmin < 1000.) {(*h)->Fill(mlbmin, w[0]*w[1]*w[4]);} h++; //mlb
-                              (*h)->Fill(metpt);                   h++; //met
-                              (*h)->Fill(nj);                      h++; //njets
-                                                                   h++; //ptjets
-                                                                   h++; //etajets
-                              (*h)->Fill(nbjets);                  h++; //nbjets
-                                                                   h++; //ptbjets
-                                                                   h++; //etabjets
-          for(int il = 0; il<nl; il++){(*h)->Fill(lpt[il]);}       h++; //ptleps
-          for(int il = 0; il<nl; il++){(*h)->Fill(leta[il]);}      h++; //etaleps
+          if(mlbmin < 1000.) {(*h)->Fill(mlbmin, finalWt);} h++; //mlb
+                              (*h)->Fill(metpt, finalWt);   h++; //met
+                              (*h)->Fill(nj, finalWt);      h++; //njets
+                                                            h++; //ptjets
+                                                            h++; //etajets
+                              (*h)->Fill(nbjets, finalWt);  h++; //nbjets
+                                                            h++; //ptbjets
+                                                            h++; //etabjets
+          for(int il = 0; il<nl; il++){(*h)->Fill(lpt[il], finalWt);}   h++; //ptleps
+          for(int il = 0; il<nl; il++){(*h)->Fill(leta[il], finalWt);}  h++; //etaleps
+                                       (*h)->Fill(1, finalWt);          h++; //count
+          for(int it = 0; it<50; it++){if(tmass[it]>0) (*h)->Fill(tmass[it], finalWt);} h++; //tmass
 
           break; 
-      } else h+=10;
+      } else h+=12;
     }
 }
 
