@@ -114,7 +114,7 @@ void MlbWidthAnalysis::WriteHistos() {
     }
 }
 
-TH1F* MlbWidthAnalysis::getInterpHisto(char* lep, float width) {
+TH1F* MlbWidthAnalysis::getInterpHisto(const char* lep, float width) {
     TFile *interpFile = new TFile(weightsLocation);
       
     char histoLocation[256];
