@@ -37,7 +37,7 @@ int aBins[36] = { 100,  0,  200,       50,  0, 200,
                    20, -5,    5,       15,  0,  15,
                   100,  0,  500,       20, -5,   5,
                   100,  0,  500,       20, -5,   5,
-                   10,  0,    9,      100,  100, 200 };
+                   10,  0,    9,      100,  150, 190 };
 
 bool interpolate = false;
 TString weightsLocation = "treedir/TMassWeightHistograms.root";
