@@ -55,14 +55,14 @@ void GetInterpHistos() {
       char targName[128];
       sprintf(targName, "mlbwa_%s_TMassWeights_NomTo%.2f", leps[i],curWidth); 
       TH1F trgHisto =  th1fmorph(targName   , targName, 
-                                         nomHisto   , maxHisto, 
-                                         nomWidth   , maxWidth,
-                                         curWidth, 1, 1);
+                                 nomHisto   , maxHisto, 
+                                 nomWidth   , maxWidth,
+                                 curWidth, 1, 1);
 
-      cout<<"Dividing"<<endl;
+      cout<<" - dividing"<<endl;
       trgHisto.Divide(nomHisto);
 
-      cout<<"Writing!"<<endl;
+      cout<<" - writing!"<<endl;
       trgHisto.Write();
     }
   }

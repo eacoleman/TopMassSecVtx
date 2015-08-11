@@ -186,10 +186,10 @@ void MlbWidthAnalysis::analyze() {
 
           // Loop through the stored top masses, get average mass value
           for(int i=0; i<50;i++) {
-            if(tmass[i]>0) { 
-              avgTopMass+=getBinContentAt(intrpWtHisto,tmass[i]);
-              debugTop += tmass[i];
-              debugTop += TString(" ");
+            if(tmass[i]>1) { 
+              avgTopMass += tmass[i];
+              debugTop   += tmass[i];
+              debugTop   += TString(" ");
               numNonzeroTops++;
             }
           }
@@ -198,7 +198,7 @@ void MlbWidthAnalysis::analyze() {
           // If we want to interpolate, set the weights accordingly
           if(interpolate) {
             intrpWtHisto = getInterpHisto(processes.at(i).Data(),currentWidth);
-            intrpWt = intrpWtHisto.getBinContentAt(intrpWtHisto, avgTopMass);
+            intrpWt = getBinContentAt(intrpWtHisto, avgTopMass);
           }
 
           // Let's see what the tmass arrays are filled with
@@ -259,7 +259,7 @@ void MlbWidthAnalysis::analyze() {
           for(int il = 0; il<nl; il++){(*h)->Fill(lpt[il], finalWt);}    h++; //ptleps
           for(int il = 0; il<nl; il++){(*h)->Fill(leta[il], finalWt);}   h++; //etaleps
                                        (*h)->Fill(1, finalWt);           h++; //count
-                                       (*h)->Fill(avgTopMass, finalWt);} h++; //tmass
+                                       (*h)->Fill(avgTopMass, finalWt);  h++; //tmass
 
           // This event can't be anything else, so break out of the final state loop
           break; 
