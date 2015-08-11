@@ -14,17 +14,17 @@
 const float gCSVWPMedium = 0.783;
 const float gCSVWPLoose = 0.405;
 
-//process names
+//process names, vector and array
 TString aProc[5] = { "E", "EE", "EM", "MM", "M" }; 
 std::vector<TString> processes (&aProc[0],&aProc[0]+5);
 
-//histogram names
+//histogram names, vector and array
 TString aNames[12] = { "Mlb", "MET", "J_Num", "J_Pt", "J_Eta",
                        "B_Num", "B_Pt", "B_Eta", "L_Pt", "L_Eta", "Count", 
                        "TMass" };
 std::vector<TString> histNames (&aNames[0],&aNames[0]+12);
 
-//axis titles
+//axis titles, vector and array
 TString aAxes[12] = { "M(lb) [GeV]", "Missing E_{t} [GeV]", "Number of Jets",
                       "Jet P_{t} [GeV]", "Jet #eta", "Number of B-jets",
                       "B-jet P_{t} [GeV]", "B-jet #eta", "Lepton P_{t} [GeV]",
@@ -32,12 +32,12 @@ TString aAxes[12] = { "M(lb) [GeV]", "Missing E_{t} [GeV]", "Number of Jets",
 std::vector<TString> histAxisT (&aAxes[0],&aAxes[0]+12); 
 
 //binning options
-int aBins[36] = { 100,  0,  200,       50,  0, 200,
-                   15,  0,   15,      100,  0, 500,
-                   20, -5,    5,       15,  0,  15,
-                  100,  0,  500,       20, -5,   5,
-                  100,  0,  500,       20, -5,   5,
-                   10,  0,    9,      100,  150, 190 };
+int aBins[36] = { 100,  0,  200,       50,   0, 200,
+                   15,  0,   15,      100,   0, 500,
+                   20, -5,    5,       15,   0,  15,
+                  100,  0,  500,       20,  -5,   5,
+                  100,  0,  500,       20,  -5,   5,
+                   10,  0,    9,      100, 150, 190 };
 
 bool interpolate = false;
 TString weightsLocation = "treedir/TMassWeightHistograms.root";
@@ -177,22 +177,38 @@ void MlbWidthAnalysis::analyze() {
     std::vector<TH1*>::iterator h = fHistos.begin();
     for(unsigned int i=0; i<processes.size() && h != fHistos.end();i++) {
       if(selectEvent(i)){
+          // Initial variables
           TH1F *intrpWtHisto;
           float intrpWt = 1;
+          float avgTopMass = 0;
+          int numNonzeroTops = 0; 
+          TString debugTop = processes.at(i) + TString(" ");
 
+          // Loop through the stored top masses, get average mass value
+          for(int i=0; i<50;i++) {
+            if(tmass[i]>0) { 
+              avgTopMass+=getBinContentAt(intrpWtHisto,tmass[i]);
+              debugTop += tmass[i];
+              debugTop += TString(" ");
+              numNonzeroTops++;
+            }
+          }
+          avgTopMass /= numNonzeroTops;
+          
+          // If we want to interpolate, set the weights accordingly
           if(interpolate) {
             intrpWtHisto = getInterpHisto(processes.at(i).Data(),currentWidth);
-            intrpWt = getBinContentAt(intrpWtHisto,tmass[0]); 
-            //int numNonzero = 0; intrpWt = 0;
-            //for(int i=0; i<50;i++) {
-            //  if(tmass[i]>0) { 
-            //    intrpWt+=getBinContentAt(intrpWtHisto,tmass[i]);
-            //    numNonzero++;
-            //  }
-            //}
-            //intrpWt /= numNonzero;
+            intrpWt = intrpWtHisto.getBinContentAt(intrpWtHisto, avgTopMass);
           }
 
+          // Let's see what the tmass arrays are filled with
+          std::cout<<debugTop.Data()<<std::endl;
+
+          // The weight we want to use to fill histograms
+          // w[0] = branching fraction
+          // w[1] = pileup weight
+          // w[4] = lepton selection efficiency
+          // intrpWt = weight we get from the morphed histograms for interpolation
           float finalWt = w[0]*w[1]*w[4]*intrpWt;
 
           float mlbmin = 1000.;
@@ -229,8 +245,6 @@ void MlbWidthAnalysis::analyze() {
           }
 
           // FILL REMAINING HISTOGRAMS
-          // using a sketchy iterator (but hey, it works).
-
           // Fill histogram with weights for branching fractions (w[0]),
           // pileup (w[1]), and lepton selection efficiency (w[4])
           // Check l 632-642 in bin/runTopAnalysis.cc for all the weights
@@ -242,11 +256,12 @@ void MlbWidthAnalysis::analyze() {
                               (*h)->Fill(nbjets, finalWt);  h++; //nbjets
                                                             h++; //ptbjets
                                                             h++; //etabjets
-          for(int il = 0; il<nl; il++){(*h)->Fill(lpt[il], finalWt);}   h++; //ptleps
-          for(int il = 0; il<nl; il++){(*h)->Fill(leta[il], finalWt);}  h++; //etaleps
-                                       (*h)->Fill(1, finalWt);          h++; //count
-          for(int it = 0; it<50; it++){if(tmass[it]>0) (*h)->Fill(tmass[it], finalWt);} h++; //tmass
+          for(int il = 0; il<nl; il++){(*h)->Fill(lpt[il], finalWt);}    h++; //ptleps
+          for(int il = 0; il<nl; il++){(*h)->Fill(leta[il], finalWt);}   h++; //etaleps
+                                       (*h)->Fill(1, finalWt);           h++; //count
+                                       (*h)->Fill(avgTopMass, finalWt);} h++; //tmass
 
+          // This event can't be anything else, so break out of the final state loop
           break; 
       } else h+=12;
     }
