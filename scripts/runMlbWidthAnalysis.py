@@ -141,7 +141,7 @@ if __name__ == "__main__":
                                            treeloc=opt.treeLoc,
                                            interpolate=opt.interpolate,
                                            cwidth=currentWidth,
-                                           iweights=opt.interpolationWeights
+                                           iweights=opt.interpolationWeights,
                                            maxevents=opt.maxEvents)
             else:
                 from multiprocessing import Pool
