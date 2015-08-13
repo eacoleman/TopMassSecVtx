@@ -16,7 +16,7 @@ def runLxyTreeAnalysisPacked(args):
         print 50*'<'
         return False
 
-def runLxyTreeAnalysis(name,   location, treeloc, interpolate, 
+def runLxyTreeAnalysis(name,   location, treeloc, interpolate,
                        cwidth, iweights, maxevents=-1):
     from ROOT import gSystem, TChain
 
@@ -102,8 +102,8 @@ if __name__ == "__main__":
                       action="store", type="int", dest="maxEvents",
                       help=("Maximum number of events to process"
                             "[default: %default (all)]"))
-    parser.add_option("-i", "--interp", default=False,
-                      action="store", type="bool", dest="interpolate",
+    parser.add_option("-i", "--interp", default="False",
+                      action="store", type="string", dest="interpolate",
                       help=("Whether to interpolate or not"
                             "[default: %default]"))
     parser.add_option("-I", "--interpols", default=1,
@@ -139,7 +139,7 @@ if __name__ == "__main__":
                         runLxyTreeAnalysis(name=name,
                                            location=task,
                                            treeloc=opt.treeLoc,
-                                           interpolate=opt.interpolate,
+                                           interpolate=bool(opt.interpolate),
                                            cwidth=currentWidth,
                                            iweights=opt.interpolationWeights,
                                            maxevents=opt.maxEvents)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
                 from multiprocessing import Pool
                 pool = Pool(opt.jobs)
 
-                tasklist = [(name, task, opt.treeLoc, opt.interpolate, 
+                tasklist = [(name, task, opt.treeLoc, bool(opt.interpolate),
                              currentWidth, opt.interpolationWeights, opt.maxEvents)
                                    for name,task in tasks]
                 pool.map(runLxyTreeAnalysisPacked, tasklist)
