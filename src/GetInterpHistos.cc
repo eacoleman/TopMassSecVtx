@@ -37,7 +37,7 @@ GetInterpHistos::GetInterpHistos(TString nomF, float nomW   , TString maxF,
       outFile->cd();
       char targName[128];
       sprintf(targName, "mlbwa_%s_TMassWeights_NomTo%.2f", leps[i],curWidth); 
-      TH1F trgHisto =  th1fmorph(targName   , targName, 
+      TH1F *trgHisto =  th1fmorph(targName   , targName, 
                                  nomHisto   , maxHisto, 
                                  nomWidth   , maxWidth,
                                  curWidth, 1, 1);
