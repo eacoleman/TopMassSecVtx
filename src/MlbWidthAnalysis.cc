@@ -199,7 +199,7 @@ void MlbWidthAnalysis::analyze() {
           
           // If we want to interpolate, set the weights accordingly
           if(interpolate) {
-            intrpWtHisto = getInterpHisto(processes.at(i).Data(),currentWidth);
+            intrpWtHisto = getInterpHisto(processes.at(i).Data());
             intrpWt = getBinContentAt(intrpWtHisto, avgTopMass);
           }
 
