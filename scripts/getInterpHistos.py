@@ -22,6 +22,8 @@ def getInterpHistos(nomName, nomWidth, maxName, maxWidth, numInterp, outDir):
 if __name__ == "__main__":
     from optparse import OptionParser
     usage = """
+      ./getInterpHistos.py [nominalLocation] [nominalWidth] [maxLocation] [maxWidth]
+
       Give the locations of processed root files for a nominal- and max-width 
       samples. Specify the number of interpolations to apply and the respective
       widths of the input samples.
