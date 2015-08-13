@@ -7,11 +7,11 @@
 
 class GetInterpHistos {
 
-  TString nomLocation("treedir/1xSample/MC8TeV_TTJets_MSDecays_172v5.root");
-  TString maxLocation("treedir/5xSample/MC8TeV_TTJets_widthx5.root");
-  TString outFileLocation("treedir/TMassWeightHistograms.root");
+  TString nomLocation = TString("treedir/1xSample/MC8TeV_TTJets_MSDecays_172v5.root");
+  TString maxLocation = TString("treedir/5xSample/MC8TeV_TTJets_widthx5.root");
+  TString outFileLocation = TString("treedir/TMassWeightHistograms.root");
 
-  std::vector<char[4]> leps = { "E", "EE", "EM", "MM", "M" };
+  std::vector<TString> leps = { "E", "EE", "EM", "MM", "M" };
 
   float maxWidth = 7.5;
   float nomWidth = 1.5;

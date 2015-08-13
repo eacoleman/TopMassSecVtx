@@ -56,4 +56,4 @@ GetInterpHistos::GetInterpHistos(TString nomFile, float nomW, TString maxFile,
 
 }
 
-#ifndef
+#endif
