@@ -39,10 +39,6 @@ int aBins[36] = { 100,  0,  200,       50,   0, 200,
                   100,  0,  500,       20,  -5,   5,
                    10,  0,    9,      100, 150, 190 };
 
-bool interpolate = false;
-TString weightsLocation = "treedir/TMassWeightHistograms.root";
-float currentWidth = 3.0;
-
 /////////////////////////////////////////////////////////////////////////////////
 
 float getBinContentAt(TH1F* histo, float input) {
@@ -114,11 +110,17 @@ void MlbWidthAnalysis::WriteHistos() {
     }
 }
 
-TH1F* MlbWidthAnalysis::getInterpHisto(const char* lep, float width) {
+void MlbWidthAnalysis::PrepareInterpolation(float cWid,TString wLoc) {
+  interpolate = true;
+  currentWidth = cWid;
+  weightsLocation = wLoc;
+}
+
+TH1F* MlbWidthAnalysis::getInterpHisto(const char* lep) {
     TFile *interpFile = new TFile(weightsLocation);
       
     char histoLocation[256];
-    sprintf(histoLocation, "mlwba_%s_TMassWeights_NomTo%.2f", lep, width);
+    sprintf(histoLocation, "mlwba_%s_TMassWeights_NomTo%.2f", lep, currentWidth);
     TH1F *ratioHisto = (TH1F*) interpFile->Get(histoLocation);
 
     return ratioHisto;
@@ -197,7 +199,7 @@ void MlbWidthAnalysis::analyze() {
           
           // If we want to interpolate, set the weights accordingly
           if(interpolate) {
-            intrpWtHisto = getInterpHisto(processes.at(i).Data(),currentWidth);
+            intrpWtHisto = getInterpHisto(processes.at(i).Data());
             intrpWt = getBinContentAt(intrpWtHisto, avgTopMass);
           }
 

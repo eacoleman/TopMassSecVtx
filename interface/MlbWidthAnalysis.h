@@ -19,8 +19,13 @@
 #include "UserCode/TopMassSecVtx/interface/LxyTreeAnalysisBase.h"
 
 class MlbWidthAnalysis : public LxyTreeAnalysisBase {
+
+bool interpolate = false;
+float currentWidth = 3.0;
+TString weightsLocation = "treedir/TMassWeightHistograms.root";
+
 public:
-    MlbWidthAnalysis(TTree *tree=0,TString weightsDir=""):LxyTreeAnalysisBase(tree) {
+    MlbWidthAnalysis(TTree *tree=0, TString weightsDir=""):LxyTreeAnalysisBase(tree) {
         fMaxevents = -1;
     }
     virtual ~MlbWidthAnalysis() {}
@@ -32,7 +37,8 @@ public:
     virtual void BookHistos();
     virtual void WriteHistos();
     virtual void analyze();
-    virtual TH1F* getInterpHisto(const char* lep, float width);
+    virtual void PrepareInterpolation(float, TString);
+    virtual TH1F* getInterpHisto(const char* lep);
     virtual bool selectEvent(int);
 
     inline virtual void setMaxEvents(Long64_t max) {
