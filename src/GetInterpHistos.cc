@@ -21,7 +21,7 @@ GetInterpHistos::GetInterpHistos(TString nomF, float nomW   , TString maxF,
   for(int wid=1; wid<=interpolations; wid++) {
     float curWidth = wid*(maxWidth - nomWidth)/(interpolations+1)+nomWidth;
 
-    for(size_t i=0; i<leps.size(); i++) {
+    for(int i=0; i<lepsSize; i++) {
       char histLoc[128];
       sprintf(histLoc, "mlbwa_%s_TMass", leps[i]);
       std::cout<<histLoc<<std::endl;

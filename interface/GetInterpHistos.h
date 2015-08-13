@@ -1,9 +1,6 @@
 #ifndef GetInterpHistos_h
 #define GetInterpHistos_h
 
-#include <cstdlib>
-#include <array>
-
 #include <TFile.h>
 #include <TH1D.h>
 #include <TString.h>
@@ -17,7 +14,8 @@ class GetInterpHistos {
   int interpolations = 3;
   TString outFileLocation = TString("treedir/TMassWeightHistograms.root");
 
-  std::array<char*,5> leps = { {"E"}, {"EE"}, {"EM"}, {"MM"}, {"M"} };
+  const char* leps[5] = { {"E"}, {"EE"}, {"EM"}, {"MM"}, {"M"} };
+  const int lepsSize = 5;
 
 
 public:
