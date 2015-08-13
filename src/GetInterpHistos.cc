@@ -28,17 +28,17 @@ GetInterpHistos::GetInterpHistos(TString nomF, float nomW   , TString maxF,
       // Get the name of the tmass histogram for this final state
       char histLoc[128];
       sprintf(histLoc, "mlbwa_%s_TMass", leps[i]);
-      std::cout<<histLoc<<std::endl;
+      cout<<histLoc<<endl;
 
       // Get the nominal tmass histogram
       nomFile->cd();
       TH1F *nomHisto = (TH1F*) nomFile->Get(histLoc);
-      std::cout<<nomHisto->GetSumOfWeights()<<std::endl;
+      cout<<nomHisto->GetSumOfWeights()<<endl;
 
       // Get the max-width tmass histogram
       maxFile->cd();
       TH1F *maxHisto = (TH1F*) maxFile->Get(histLoc);
-      std::cout<<maxHisto->GetSumOfWeights()<<std::endl;
+      cout<<maxHisto->GetSumOfWeights()<<endl;
 
       // Morph the histograms together to get our target for the current width
       outFile->cd();
@@ -50,10 +50,10 @@ GetInterpHistos::GetInterpHistos(TString nomF, float nomW   , TString maxF,
                                  curWidth, 1, 1);
 
       // Divide the histograms and write to the outfile
-      std::cout<<" - dividing"<<std::endl;
+      cout<<" - dividing"<<endl;
       trgHisto->Divide(nomHisto);
 
-      std::cout<<" - writing!"<<std::endl;
+      cout<<" - writing!"<<endl;
       trgHisto->Write();
     }
   }
