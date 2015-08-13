@@ -4,7 +4,15 @@
 #include "UserCode/TopMassSecVtx/interface/GetInterpHistos.h"
 #include "UserCode/TopMassSecVtx/src/th1fmorph.cc"
 
-GetInterpHistos::GetInterpHistos() {
+GetInterpHistos::GetInterpHistos(TString nomFile, float nomW, TString maxFile,
+                                 float maxW , int numInterp , TString outDir) :
+    nomLocation(nomFile),
+    maxLocation(maxFile),
+    nomWidth(nomW),
+    maxWidth(maxW),
+    interpolations(numInterp),
+    outFileLocation(outDir)
+{
 
   TFile *nomFile = new TFile(nomLocation, "READ");
   TFile *maxFile = new TFile(maxLocation, "READ");
@@ -48,4 +56,4 @@ GetInterpHistos::GetInterpHistos() {
 
 }
 
-#ifndef
+#endif
