@@ -17,7 +17,7 @@ class GetInterpHistos {
   int interpolations = 3;
   TString outFileLocation = TString("treedir/TMassWeightHistograms.root");
 
-  std::array<char[4],5> leps = { {"E"}, {"EE"}, {"EM"}, {"MM"}, {"M"} };
+  std::array<char*,5> leps = { {"E"}, {"EE"}, {"EM"}, {"MM"}, {"M"} };
 
 
 public:
