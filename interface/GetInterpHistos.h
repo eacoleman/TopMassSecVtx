@@ -5,6 +5,8 @@
 #include <TH1D.h>
 #include <TString.h>
 
+#include "UserCode/TopMassSecVtx/interface/th1fmorph.h"
+
 class GetInterpHistos {
 
   TString nomLocation = TString("treedir/1xSample/MC8TeV_TTJets_MSDecays_172v5.root");
@@ -16,7 +18,6 @@ class GetInterpHistos {
 
   const char* leps[5] = { {"E"}, {"EE"}, {"EM"}, {"MM"}, {"M"} };
   const int lepsSize = 5;
-
 
 public:
   GetInterpHistos(TString, float, TString, float, int, TString);
