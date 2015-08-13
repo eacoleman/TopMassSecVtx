@@ -1,74 +1,68 @@
-#include "./src/th1fmorph.cc"
-#include <cstdlib>
+#ifndef GetInterpHistos_cxx
+#define GetInterpHistos_cxx
 
-#include "TString.h"
-#include "TH1.h"
-#include "TH1F.h"
-#include "TFile.h"
+#include "UserCode/TopMassSecVtx/interface/GetInterpHistos.h"
 
-using namespace std;
+GetInterpHistos::GetInterpHistos(TString nomF, float nomW   , TString maxF,
+                                 float maxW  , int numInterp, TString outDir) :
+    nomLocation(nomF),
+    nomWidth(nomW),
+    maxLocation(maxF),
+    maxWidth(maxW),
+    interpolations(numInterp),
+    outFileLocation(outDir)
+{
 
-////////////////////////////////////////////////////////////////////////////////
-//                                    Magic                                   //
-////////////////////////////////////////////////////////////////////////////////
-
-TString nomLocation("treedir/1xSample/MC8TeV_TTJets_MSDecays_172v5.root");
-TString maxLocation("treedir/5xSample/MC8TeV_TTJets_widthx5.root");
-TString outFileLocation("treedir/TMassWeightHistograms.root");
-
-const char* leps[5] = { "E", "EE", "EM", "MM", "M" };
-int lepsSize = 5;
-
-float maxWidth = 7.5;
-float nomWidth = 1.5;
-int interpolations = 3;
-
-////////////////////////////////////////////////////////////////////////////////
-
-void GetInterpHistos() {
-
+  // Open the proper files
   TFile *nomFile = new TFile(nomLocation, "READ");
   TFile *maxFile = new TFile(maxLocation, "READ");
   TFile *outFile = new TFile(outFileLocation, "RECREATE");
-  TCanvas *c = new TCanvas();
 
+  // Loop through the interpolations we want to perform
   for(int wid=1; wid<=interpolations; wid++) {
+    // Calculate the width corresponding to the interpolation
     float curWidth = wid*(maxWidth - nomWidth)/(interpolations+1)+nomWidth;
 
+    // Loop through the different final states
     for(int i=0; i<lepsSize; i++) {
+      // Get the name of the tmass histogram for this final state
       char histLoc[128];
       sprintf(histLoc, "mlbwa_%s_TMass", leps[i]);
       cout<<histLoc<<endl;
 
+      // Get the nominal tmass histogram
       nomFile->cd();
       TH1F *nomHisto = (TH1F*) nomFile->Get(histLoc);
       cout<<nomHisto->GetSumOfWeights()<<endl;
-      nomHisto->Draw();
 
+      // Get the max-width tmass histogram
       maxFile->cd();
       TH1F *maxHisto = (TH1F*) maxFile->Get(histLoc);
       cout<<maxHisto->GetSumOfWeights()<<endl;
-      maxHisto->Draw("SAME");
-      c->SaveAs("temp.jpg");
 
+      // Morph the histograms together to get our target for the current width
       outFile->cd();
       char targName[128];
       sprintf(targName, "mlbwa_%s_TMassWeights_NomTo%.2f", leps[i],curWidth); 
-      TH1F trgHisto =  th1fmorph(targName   , targName, 
+      TH1F *trgHisto =  th1fmorph(targName   , targName, 
                                  nomHisto   , maxHisto, 
                                  nomWidth   , maxWidth,
                                  curWidth, 1, 1);
 
+      // Divide the histograms and write to the outfile
       cout<<" - dividing"<<endl;
-      trgHisto.Divide(nomHisto);
+      trgHisto->Divide(nomHisto);
 
       cout<<" - writing!"<<endl;
-      trgHisto.Write();
+      trgHisto->Write();
     }
   }
 
+  // Clean up
   nomFile->Close();
   maxFile->Close();
   outFile->Close();
 
 }
+
+#endif
