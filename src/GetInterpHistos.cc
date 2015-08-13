@@ -43,10 +43,10 @@ GetInterpHistos::GetInterpHistos(TString nomF, float nomW   , TString maxF,
                                  curWidth, 1, 1);
 
       std::cout<<" - dividing"<<std::endl;
-      trgHisto.Divide(nomHisto);
+      trgHisto->Divide(nomHisto);
 
       std::cout<<" - writing!"<<std::endl;
-      trgHisto.Write();
+      trgHisto->Write();
     }
   }
 
