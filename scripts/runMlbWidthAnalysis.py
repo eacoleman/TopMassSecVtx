@@ -6,17 +6,18 @@ from runLxyTreeAnalysis import getListOfTasks, getBareName, makeDir, copyObject
 from runPlotter import readXSecWeights
 
 def runLxyTreeAnalysisPacked(args):
-    name, location, treeloc, maxevents = args
+    name, location, treeloc, interpolate, cwidth, iweights, maxevents = args
     try:
-        return runLxyTreeAnalysis(name, location, treeloc,
-                                  maxevents)
+        return runLxyTreeAnalysis(name,   location, treeloc, interpolate,
+                                  cwidth, iweights, maxevents)
     except ReferenceError:
         print 50*'<'
         print "  Problem with", name, "continuing without"
         print 50*'<'
         return False
 
-def runLxyTreeAnalysis(name, location, treeloc, maxevents=-1):
+def runLxyTreeAnalysis(name,   location, treeloc, interpolate, 
+                       cwidth, iweights, maxevents=-1):
     from ROOT import gSystem, TChain
 
     ## Load the previously compiled shared object library into ROOT
@@ -51,7 +52,10 @@ def runLxyTreeAnalysis(name, location, treeloc, maxevents=-1):
 
     weightsDir='data/weights'
     if 'Data' in name: weightsDir=''
+
     ana = MlbWidthAnalysis(ch,weightsDir)
+    if interpolate: ana.PrepareInterpolation(cwidth, iweights)
+
     if maxevents > 0:
         ana.setMaxEvents(maxevents)
 
@@ -98,6 +102,26 @@ if __name__ == "__main__":
                       action="store", type="int", dest="maxEvents",
                       help=("Maximum number of events to process"
                             "[default: %default (all)]"))
+    parser.add_option("-i", "--interp", default=False,
+                      action="store", type="bool", dest="interpolate",
+                      help=("Whether to interpolate or not"
+                            "[default: %default]"))
+    parser.add_option("-I", "--interpols", default=1,
+                      action="store", type="int", dest="interpolations",
+                      help=("How many interpolations to perform"
+                            "[default: %default]"))
+    parser.add_option("-N", "--nomWidth", default=1.5,
+                      action="store", type="float", dest="nomWidth",
+                      help=("The minimum width of the original samples"
+                            "[default: %default]"))
+    parser.add_option("-M", "--maxWidth", default=7.5,
+                      action="store", type="float", dest="maxWidth",
+                      help=("The maximum width of the original samples"
+                            "[default: %default]"))
+    parser.add_option("-W", "--interpWeights", default="treedir/TMassWeightHistograms.root",
+                      action="store", type="string", dest="interpolationWeights",
+                      help=("The location of the interpolation weights file"
+                            "[default: %default]"))
     (opt, args) = parser.parse_args()
 
     if len(args)>0:
@@ -106,19 +130,27 @@ if __name__ == "__main__":
         else:
             tasks = [(getBareName(x), x) for x in args]
 
-        if opt.jobs == 0:
-            for name, task in tasks:
-                runLxyTreeAnalysis(name=name,
-                                   location=task,
-                                   treeloc=opt.treeLoc,
-                                   maxevents=opt.maxEvents)
-        else:
-            from multiprocessing import Pool
-            pool = Pool(opt.jobs)
 
-            tasklist = [(name, task, opt.treeLoc, opt.maxEvents)
-                               for name,task in tasks]
-            pool.map(runLxyTreeAnalysisPacked, tasklist)
+        for interpolation in range(1,opt.interpolations):
+            currentWidth = interpolation*(opt.maxWidth-opt.nomWidth)/(opt.interpolations+1) + \
+                           opt.nomWidth
+            if opt.jobs == 0:
+                    for name, task in tasks:
+                        runLxyTreeAnalysis(name=name,
+                                           location=task,
+                                           treeloc=opt.treeLoc,
+                                           interpolate=opt.interpolate,
+                                           cwidth=currentWidth,
+                                           iweights=opt.interpolationWeights
+                                           maxevents=opt.maxEvents)
+            else:
+                from multiprocessing import Pool
+                pool = Pool(opt.jobs)
+
+                tasklist = [(name, task, opt.treeLoc, opt.interpolate, 
+                             currentWidth, opt.interpolationWeights, opt.maxEvents)
+                                   for name,task in tasks]
+                pool.map(runLxyTreeAnalysisPacked, tasklist)
 
         exit(0)
 

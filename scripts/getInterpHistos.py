@@ -41,11 +41,11 @@ if __name__ == "__main__":
     parser.add_option("-o", "--outDir", default="treedir/TMassWeightHistograms.root",
                       action="store", type="string", dest="outDir",
                       help=("Output filepath for weight histograms"
-                            "[default: treedir/TMassWeightHistograms.root]"))
+                            "[default: %default]"))
     parser.add_option("-n", "--numInterp", default=3,
                       action="store", type="int", dest="numInterp",
                       help=("Number of interpolations to perform"
-                            "[default: 3]"))
+                            "[default: %default]"))
     (opt, args) = parser.parse_args()
 
     if len(args)>0:
