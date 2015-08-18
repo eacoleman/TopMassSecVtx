@@ -31,7 +31,7 @@ def runLxyTreeAnalysis(name,   location, treeloc, interpolate,
         print 'Did you run scram b ?'
         exit(-1)
 
-    print '  ... processing', location
+    print '  ... processing', location, cwidth
 
     ## Handle input files
     ch = TChain(treeloc)
@@ -54,16 +54,18 @@ def runLxyTreeAnalysis(name,   location, treeloc, interpolate,
     if 'Data' in name: weightsDir=''
 
     ana = MlbWidthAnalysis(ch,weightsDir)
+    outname = name
     if interpolate == True:
         print "Interpolating"
         ana.PrepareInterpolation(cwidth, iweights)
+        outname += ("_i%.2f" % cwidth)
 
     if maxevents > 0:
         ana.setMaxEvents(maxevents)
 
     ## Handle output file
     makeDir(opt.outDir)
-    output_file = os.path.join(opt.outDir, name+".root")
+    output_file = os.path.join(opt.outDir, outname+".root")
 
     ## Run the loop
     ana.RunJob(output_file)

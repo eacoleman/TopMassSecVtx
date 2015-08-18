@@ -39,6 +39,8 @@ int aBins[36] = { 100,  0,  200,       50,   0, 200,
                   100,  0,  500,       20,  -5,   5,
                    10,  0,    9,      100,   0, 300 };
 
+TFile *interpFile; 
+
 /////////////////////////////////////////////////////////////////////////////////
 
 void MlbWidthAnalysis::RunJob(TString filename) {
@@ -107,6 +109,7 @@ void MlbWidthAnalysis::PrepareInterpolation(float cWid,TString wLoc) {
   interpolate = true;
   currentWidth = cWid;
   weightsLocation = wLoc;
+  interpFile = new TFile(weightsLocation, "READ");
 }
 
 //
@@ -181,14 +184,13 @@ void MlbWidthAnalysis::analyze() {
           
           // If we want to interpolate, set the weights accordingly
           if(interpolate) {
-              TFile *interpFile = new TFile(weightsLocation, "READ");
-
+              // Get the interp weight histogram
               char histoLocation[256];
               sprintf(histoLocation, "mlbwa_%s_TMassWeights_MaxTo%.2f", processes.at(i).Data(), currentWidth);
               TH1D *intrpWtHisto = (TH1D*) interpFile->Get(histoLocation)->Clone("ratios");
               intrpWtHisto->SetDirectory(0);
-
-              interpFile->Close();
+              
+              // Get the weight content at avgTopMass
               intrpWt = intrpWtHisto->GetBinContent(intrpWtHisto->GetXaxis()->FindBin(avgTopMass));
           }
 
