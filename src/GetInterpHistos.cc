@@ -2,6 +2,7 @@
 #define GetInterpHistos_cxx
 
 #include "UserCode/TopMassSecVtx/interface/GetInterpHistos.h"
+#include "UserCode/TopMassSecVtx/interface/MacroUtils.h"
 
 GetInterpHistos::GetInterpHistos(TString nomF, float nomW   , TString maxF,
                                  float maxW  , int numInterp, TString outDir) :
@@ -10,7 +11,23 @@ GetInterpHistos::GetInterpHistos(TString nomF, float nomW   , TString maxF,
     maxLocation(maxF),
     maxWidth(maxW),
     interpolations(numInterp),
-    outFileLocation(outDir)
+    outFileLocation(outDir) 
+{
+  // a hard code hack to deal with scram annoyances
+  leps.push_back(TString("E"));
+  leps.push_back(TString("EE"));
+  leps.push_back(TString("EM"));
+  leps.push_back(TString("MM"));
+  leps.push_back(TString("M"));
+
+  std::cout<<"LEPS: ";
+  for(unsigned int i=0; i<leps.size(); i++) {
+    std::cout<<leps.at(i);
+  }
+  std::cout<<"\n"<<std::endl;
+}
+
+void GetInterpHistos::GetHistos()
 {
 
   // Open the proper files
@@ -23,34 +40,47 @@ GetInterpHistos::GetInterpHistos(TString nomF, float nomW   , TString maxF,
     // Calculate the width corresponding to the interpolation
     float curWidth = wid*(maxWidth - nomWidth)/(interpolations+1)+nomWidth;
 
+    std::cout<<" - c: "<<curWidth<<" n: "<<nomWidth<<" m: "<<maxWidth<<std::endl;
     // Loop through the different final states
-    for(int i=0; i<lepsSize; i++) {
+    for(unsigned int i=0; i<leps.size(); i++) {
       // Get the name of the tmass histogram for this final state
       char histLoc[128];
-      sprintf(histLoc, "mlbwa_%s_TMass", leps[i]);
+      sprintf(histLoc, "mlbwa_%s_TMass", leps.at(i).Data());
+      std::cout<<histLoc<<std::endl;
 
+      std::cout<<" - getting histograms"<<std::endl;
       // Get the nominal tmass histogram
       nomFile->cd();
-      TH1F *nomHisto = (TH1F*) nomFile->Get(histLoc);
+      TH1D *nomHisto = (TH1D*) nomFile->Get(histLoc)->Clone("SM");
+      nomHisto->SetDirectory(0);
+      nomHisto->Scale(1/nomHisto->Integral());
 
       // Get the max-width tmass histogram
       maxFile->cd();
-      TH1F *maxHisto = (TH1F*) maxFile->Get(histLoc);
+      TH1D *maxHisto = (TH1D*) maxFile->Get(histLoc)->Clone("SMx5");
+      maxHisto->SetDirectory(0);
+      maxHisto->Scale(1/maxHisto->Integral());
 
       // Morph the histograms together to get our target for the current width
       outFile->cd();
+
       char targName[128];
-      sprintf(targName, "mlbwa_%s_TMassWeights_NomTo%.2f", leps[i],curWidth); 
-      TH1F *trgHisto =  th1fmorph(targName   , targName, 
+      sprintf(targName, "mlbwa_%s_TMassWeights_MaxTo%.2f", leps.at(i).Data(),curWidth); 
+      std::cout<<" - morphing"<<std::endl;
+      TH1D *trgHisto =  th1dmorph(targName   , "", 
                                  nomHisto   , maxHisto, 
                                  nomWidth   , maxWidth,
-                                 curWidth, 1, 1);
+                                 curWidth, 1, 0);
 
       // Divide the histograms and write to the outfile
-      trgHisto->Divide(nomHisto);
+      std::cout<<" - dividing"<<std::endl;
+      trgHisto->Divide(maxHisto);
+      std::cout<<" - writing"<<std::endl;
       trgHisto->Write();
     }
   }
+
+  std::cout<<"\ncleaning up..."<<std::endl;
 
   // Clean up
   nomFile->Close();

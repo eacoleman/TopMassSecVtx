@@ -37,16 +37,9 @@ int aBins[36] = { 100,  0,  200,       50,   0, 200,
                    20, -5,    5,       15,   0,  15,
                   100,  0,  500,       20,  -5,   5,
                   100,  0,  500,       20,  -5,   5,
-                   10,  0,    9,      100, 150, 190 };
+                   10,  0,    9,      100,   0, 300 };
 
 /////////////////////////////////////////////////////////////////////////////////
-
-float getBinContentAt(TH1F* histo, float input) {
-  TAxis *xax = (TAxis*) histo->GetXaxis();
-  if(input < xax->GetXmin() || input > xax->GetXmax()) return -1;
-
-  return histo->GetBinContent(xax->FindBin(input));
-}
 
 void MlbWidthAnalysis::RunJob(TString filename) {
     TFile *file = TFile::Open(filename, "recreate");
@@ -116,16 +109,6 @@ void MlbWidthAnalysis::PrepareInterpolation(float cWid,TString wLoc) {
   weightsLocation = wLoc;
 }
 
-TH1F* MlbWidthAnalysis::getInterpHisto(const char* lep) {
-    TFile *interpFile = new TFile(weightsLocation);
-      
-    char histoLocation[256];
-    sprintf(histoLocation, "mlwba_%s_TMassWeights_NomTo%.2f", lep, currentWidth);
-    TH1F *ratioHisto = (TH1F*) interpFile->Get(histoLocation);
-
-    return ratioHisto;
-}
-
 //
 bool MlbWidthAnalysis::selectEvent(int i) {
     float btagWP = gCSVWPLoose;
@@ -180,15 +163,14 @@ void MlbWidthAnalysis::analyze() {
     for(unsigned int i=0; i<processes.size() && h != fHistos.end();i++) {
       if(selectEvent(i)){
           // Initial variables
-          TH1F *intrpWtHisto;
-          float intrpWt = 1;
-          float avgTopMass = 0;
+          double intrpWt = 1;
+          double avgTopMass = 0;
           int numNonzeroTops = 0; 
           TString debugTop = processes.at(i) + TString(" ");
 
           // Loop through the stored top masses, get average mass value
-          for(int i=0; i<50;i++) {
-            if(tmass[i]>1) { 
+          for(int i=0; i<nj;i++) {
+            if(tmass[i]>10 && tmass[i]<1000) { 
               avgTopMass += tmass[i];
               debugTop   += tmass[i];
               debugTop   += TString(" ");
@@ -199,19 +181,26 @@ void MlbWidthAnalysis::analyze() {
           
           // If we want to interpolate, set the weights accordingly
           if(interpolate) {
-            intrpWtHisto = getInterpHisto(processes.at(i).Data());
-            intrpWt = getBinContentAt(intrpWtHisto, avgTopMass);
+              TFile *interpFile = new TFile(weightsLocation, "READ");
+
+              char histoLocation[256];
+              sprintf(histoLocation, "mlbwa_%s_TMassWeights_MaxTo%.2f", processes.at(i).Data(), currentWidth);
+              TH1D *intrpWtHisto = (TH1D*) interpFile->Get(histoLocation)->Clone("ratios");
+              intrpWtHisto->SetDirectory(0);
+
+              interpFile->Close();
+              intrpWt = intrpWtHisto->GetBinContent(intrpWtHisto->GetXaxis()->FindBin(avgTopMass));
           }
 
           // Let's see what the tmass arrays are filled with
-          std::cout<<debugTop.Data()<<std::endl;
+          // std::cout<<debugTop.Data()<<std::endl;
 
           // The weight we want to use to fill histograms
           // w[0] = branching fraction
           // w[1] = pileup weight
           // w[4] = lepton selection efficiency
-          // intrpWt = weight we get from the morphed histograms for interpolation
-          float finalWt = w[0]*w[1]*w[4]*intrpWt;
+          // intrpWt = weight we get from the morphed histograms for interpolation (1 if no interp)
+          double finalWt = w[0]*w[1]*w[4]*intrpWt;
 
           float mlbmin = 1000.;
           int nbjets = 0;

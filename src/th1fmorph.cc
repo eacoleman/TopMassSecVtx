@@ -145,7 +145,7 @@ TH1_t *th1fmorph_(const char *chname,
   // Treatment for empty histograms: Return an empty histogram
   // with interpolated bins.
 
-  if (hist1->GetSum() <= 0 || hist2->GetSum() <=0 ) {
+  if (hist1->GetSumOfWeights() <= 0 || hist2->GetSumOfWeights() <=0 ) {
     cout << "Warning! th1morph detects an empty input histogram. Empty interpolated histogram returned: " 
          <<endl << "         " << chname << " - " << chtitle << endl;
     TH1_t *morphedhist = (TH1_t *)gROOT->FindObject(chname);
@@ -154,7 +154,7 @@ TH1_t *th1fmorph_(const char *chname,
     return(morphedhist);
   }
   if (idebug >= 1) cout << "Input histogram content sums: " 
-                        << hist1->GetSum() << " " << hist2->GetSum() << endl;
+                        << hist1->GetSumOfWeights() << " " << hist2->GetSumOfWeights() << endl;
   // *         
   // *......Extract the single precision histograms into double precision arrays
   // *      for the interpolation computation. The offset is because sigdis(i)
@@ -210,7 +210,7 @@ TH1_t *th1fmorph_(const char *chname,
   for(Int_t i=0;i<nb2+1;i++) {
     total += sigdis2[i];
   }
-  if (idebug >=1) cout << "Total histogram 22: " <<  total << endl;
+  if (idebug >=1) cout << "Total histogram 2: " <<  total << endl;
   for(Int_t i=1;i<nb2+1;i++) {
     sigdis2[i] = sigdis2[i]/total + sigdis2[i-1];
   }

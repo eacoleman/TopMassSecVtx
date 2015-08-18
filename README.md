@@ -86,3 +86,26 @@ To work properly, we first need to generate a cache file that stores the proper 
 If everything worked, the final plot should look something like this:
 ![Inclusive mlb distribution](http://stiegerb.web.cern.ch/stiegerb/topLxy/Mlb.png)
 ------------------------------------------------------
+### Interpolating different-width samples using TTbar signal
+
+The interpolation steps are as follows:
+  - Generate nominal-width samples as above, without running plotter (just runMlbWidthAnalysis.py)
+  - Generate 5xSM-width TTbar samples from ```/store/cmst3/group/top/summer2014/a176401/syst/MC8TeV_TTJets_widthx5_[0-9].root```
+  - Make sure the generated root trees are merged (via mergeSVLInfoFiles.py)
+  - Run /scripts/getInterpHistos.py with a command like:
+
+```
+python scripts/getInterpHistos.py [1.5-width location] 1.5 [7.5-width location] 7.5
+```
+
+  - Generate 5x-width samples again, this time with the settings as shown:
+
+```
+./scripts/runMlbWidthAnalysis.py -o treedir/AllSample -j 0 -i 1 -I [number of interpolations] /store/[...]/MC8TeV_TTJets_widthx5_[0-9].root
+```
+
+  - Merging once again, and applying runPlotter.py will output the plots in a desirable format.
+
+
+
+------------------------------------------------------

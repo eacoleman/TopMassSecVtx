@@ -5,13 +5,13 @@ TH1F *th1fmorph(const char *chname,
                 TH1F *hist1,TH1F *hist2,
                 Double_t par1,Double_t par2,Double_t parinterp,
                 Double_t morphedhistnorm,
-                Int_t idebug=0) ;
+                Int_t idebug) ;
 TH1D *th1dmorph(const char *chname,
                 const char *chtitle,
                 TH1D *hist1,TH1D *hist2,
                 Double_t par1,Double_t par2,Double_t parinterp,
                 Double_t morphedhistnorm,
-                Int_t idebug=0) ;
+                Int_t idebug) ;
   //--------------------------------------------------------------------------
   // Author           : Alex Read
   // Version 0.2 of ROOT implementation, 08.05.2011

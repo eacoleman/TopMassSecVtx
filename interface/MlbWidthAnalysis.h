@@ -6,6 +6,7 @@
 #include "TSystem.h"
 #include "TGraphErrors.h"
 #include <TFile.h>
+#include <TAxis.h>
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TRandom2.h>
@@ -38,7 +39,6 @@ public:
     virtual void WriteHistos();
     virtual void analyze();
     virtual void PrepareInterpolation(float, TString);
-    virtual TH1F* getInterpHisto(const char* lep);
     virtual bool selectEvent(int);
 
     inline virtual void setMaxEvents(Long64_t max) {

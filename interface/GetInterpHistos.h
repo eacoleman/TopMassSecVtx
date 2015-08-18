@@ -1,9 +1,13 @@
 #ifndef GetInterpHistos_h
 #define GetInterpHistos_h
 
+#include "TSystem.h"
 #include <TFile.h>
 #include <TH1D.h>
 #include <TString.h>
+#include <cstdlib>
+#include <vector>
+#include <string>
 
 #include "UserCode/TopMassSecVtx/interface/th1fmorph.h"
 
@@ -16,12 +20,13 @@ class GetInterpHistos {
   int interpolations = 3;
   TString outFileLocation = TString("treedir/TMassWeightHistograms.root");
 
-  const char* leps[5] = { {"E"}, {"EE"}, {"EM"}, {"MM"}, {"M"} };
+  std::vector<TString> leps;
   const int lepsSize = 5;
 
 public:
   GetInterpHistos(TString, float, TString, float, int, TString);
   virtual ~GetInterpHistos() {}
+  void GetHistos();
 
 };
 

@@ -54,7 +54,9 @@ def runLxyTreeAnalysis(name,   location, treeloc, interpolate,
     if 'Data' in name: weightsDir=''
 
     ana = MlbWidthAnalysis(ch,weightsDir)
-    if interpolate: ana.PrepareInterpolation(cwidth, iweights)
+    if interpolate == True:
+        print "Interpolating"
+        ana.PrepareInterpolation(cwidth, iweights)
 
     if maxevents > 0:
         ana.setMaxEvents(maxevents)
@@ -102,8 +104,8 @@ if __name__ == "__main__":
                       action="store", type="int", dest="maxEvents",
                       help=("Maximum number of events to process"
                             "[default: %default (all)]"))
-    parser.add_option("-i", "--interp", default="False",
-                      action="store", type="string", dest="interpolate",
+    parser.add_option("-i", "--interp", default=0,
+                      action="store", type=int, dest="interpolate",
                       help=("Whether to interpolate or not"
                             "[default: %default]"))
     parser.add_option("-I", "--interpols", default=1,
@@ -130,8 +132,7 @@ if __name__ == "__main__":
         else:
             tasks = [(getBareName(x), x) for x in args]
 
-
-        for interpolation in range(1,opt.interpolations):
+        for interpolation in range(1,opt.interpolations+1):
             currentWidth = interpolation*(opt.maxWidth-opt.nomWidth)/(opt.interpolations+1) + \
                            opt.nomWidth
             if opt.jobs == 0:
